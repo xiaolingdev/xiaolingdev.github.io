@@ -1,9 +1,7 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
 import { Calendar, MapPin, Clock, Users, Share2 } from 'lucide-react';
 
 const ActivityDetail = () => {
-  const { id } = useParams();
 
   // 這裡應該使用真實的數據獲取邏輯
   const activity = {

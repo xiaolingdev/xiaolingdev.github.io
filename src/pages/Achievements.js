@@ -49,7 +49,7 @@ const Achievements = () => {
       </div>
       
       <div className="mt-12 text-center">
-        <p className="text-xl text-gray-600 mb-4">這只是翁曉玲立委眾多成就中的一小部分。</p>
+        <p className="text-xl text-gray-600 mb-4">這只是曉玲眾多努力中的一小部分。</p>
         <p className="text-xl text-gray-600">她將繼續為台灣的未來貢獻自己的力量。</p>
       </div>
     </div>

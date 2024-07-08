@@ -13,7 +13,6 @@ import PolicyDetail from './pages/PolicyDetail';
 import PolicyIssues from './pages/PolicyIssues';
 import Proposals from './pages/Proposals'; // 新增這一行
 import ProposalAnalysis from './pages/ProposalAnalysis'; // 新增這一行
-import IPFSUpload from './pages/IPFSUpload'; // 新增這一行
 
 function App() {
   return (
@@ -33,7 +32,6 @@ function App() {
               <Route path="/policy-issues" element={<PolicyIssues />} />
               <Route path="/proposals" element={<Proposals />} /> {/* 新增這一行 */}
               <Route path="/proposal-analysis" element={<ProposalAnalysis />} /> {/* 新增這一行 */}
-              <Route path="/ipfs-upload" element={<IPFSUpload />} /> {/* 新增這一行 */}
             </Routes>
           </main>
           <Footer />
