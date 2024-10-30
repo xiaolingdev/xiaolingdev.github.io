@@ -13,6 +13,9 @@ import PolicyDetail from './pages/PolicyDetail';
 import PolicyIssues from './pages/PolicyIssues';
 import Proposals from './pages/Proposals'; // 新增這一行
 import ProposalAnalysis from './pages/ProposalAnalysis'; // 新增這一行
+import VideoGallery from './pages/VideoGallery'; // 新增這一行
+import VideoDetailPage from './pages/VideoDetail'; // 新增這一行
+
 
 function App() {
   return (
@@ -27,12 +30,14 @@ function App() {
               <Route path="/achievements" element={<Achievements />} />
               <Route path="/activities" element={<Activities />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/activity-detail" element={<ActivityDetail />} />
+              <Route path="/activity-detail/:id" element={<ActivityDetail />} />
               <Route path="/policy-detail" element={<PolicyDetail />} />
               <Route path="/policy-issues" element={<PolicyIssues />} />
               <Route path="/proposals" element={<Proposals />} /> {/* 新增這一行 */}
               <Route path="/proposal-analysis" element={<ProposalAnalysis />} /> {/* 新增這一行 */}
-            </Routes>
+              <Route path="/video-gallery" element={<VideoGallery />} /> {/* 新增這一行 */}
+              <Route path="/video/:title" element={<VideoDetailPage />} />
+              </Routes>
           </main>
           <Footer />
         </div>

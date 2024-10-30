@@ -1,0 +1,59 @@
+.video-detail-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.video-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.video-container {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.video-js {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.video-info {
+  margin-bottom: 20px;
+}
+
+.video-date {
+  font-style: italic;
+  color: #666;
+}
+
+.video-description {
+  margin-top: 10px;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 20px;
+}
+
+.back-link {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.loading, .error, .not-found {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 18px;
+}
+
+.error {
+  color: red;
+}
