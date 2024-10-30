@@ -1,8 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar } from 'lucide-react';
+import { ArrowRight, Calendar, FileText, Clock, Loader } from 'lucide-react';
 
 const Home = () => {
+  const [latestBills, setLatestBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchLatestBills = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('https://v2.ly.govapi.tw/bills?提案人=翁曉玲&limit=3');
+        if (!response.ok) {
+          throw new Error('Failed to fetch bills');
+        }
+        const data = await response.json();
+        setLatestBills(data.bills || []);
+      } catch (err) {
+        console.error('Error fetching bills:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatestBills();
+  }, []);
+
+  const getStatusColor = (status) => {
+    const colors = {
+      '交付審查': 'bg-blue-500',
+      '審查完畢': 'bg-green-500',
+      '程序委員會': 'bg-yellow-500',
+      '退回程序委員會': 'bg-red-500',
+      '法規委員會審查': 'bg-purple-500'
+    };
+    return colors[status] || 'bg-gray-500';
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
   const newsItems = [
     {
       id: 1,
@@ -91,6 +134,89 @@ const Home = () => {
           <div className="text-center mt-12">
             <Link to="/activities" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition duration-300 text-lg font-semibold">
               查看更多活動 <ArrowRight className="ml-2" />
+            </Link>
+          </div>
+        </div>
+      </section>
+       {/* 最新法案區塊 */}
+       <section className="py-16 bg-gradient-to-b from-white to-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold mb-12 text-center text-gray-800">最新法案</h2>
+          
+          {loading ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <div className="flex items-center gap-2 text-indigo-600">
+                <Loader className="animate-spin" />
+                <span>載入中...</span>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="text-center text-red-500 py-8">
+              <p>載入失敗</p>
+              <p className="text-sm text-gray-500 mt-2">{error}</p>
+            </div>
+          ) : latestBills.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              目前沒有法案記錄
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
+              {latestBills.map((bill) => (
+                <div 
+                  key={bill.議案編號} 
+                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className={`px-3 py-1 rounded-full text-white text-sm ${getStatusColor(bill.議案狀態)}`}>
+                        {bill.議案狀態}
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-sm">
+                        {bill.議案類別}
+                      </span>
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <Calendar size={14} className="mr-1" />
+                        {formatDate(bill.提案日期)}
+                      </div>
+                    </div>
+
+                    <h3 className="text-xl font-semibold mb-3 text-gray-800">
+                      {bill.議案名稱}
+                    </h3>
+                    
+                    {bill.案由 && (
+                      <p className="text-gray-600 mb-4 line-clamp-2">
+                        {bill.案由}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <Clock size={14} className="mr-1" />
+                        <span>最新進度：{formatDate(bill.最新進度日期)}</span>
+                      </div>
+
+                      <Link 
+                        to={`/proposals`}
+                        className="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors font-medium"
+                      >
+                        查看詳情
+                        <ArrowRight size={16} className="ml-1" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-12">
+            <Link 
+              to="/proposals" 
+              className="inline-flex items-center px-6 py-3 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors text-lg font-semibold"
+            >
+              查看所有法案 
+              <ArrowRight className="ml-2" />
             </Link>
           </div>
         </div>
