@@ -29,7 +29,7 @@ function App() {
               <Route path="/activities" element={<Activities />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/activity-detail/:id" element={<ActivityDetail />} />
-              <Route path="/policy-detail" element={<PolicyDetail />} />
+              <Route path="/policy-detail/:id" element={<PolicyDetail />} />
               <Route path="/policy-issues" element={<PolicyIssues />} />
               <Route path="/proposals" element={<Proposals />} /> {/* 新增這一行 */}
               <Route path="/video-gallery" element={<VideoGallery />} /> {/* 新增這一行 */}
