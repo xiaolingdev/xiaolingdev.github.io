@@ -1,6 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, FileText, Clock, Loader } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Calendar, 
+  FileText, 
+  Clock, 
+  Loader, 
+  Video, 
+  Play, 
+  ExternalLink,
+  Maximize2,
+  X,
+  Building
+} from 'lucide-react';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+import { VideoModal, VideoCard, LatestIvodSection } from '../components/Home_v'
+
 
 const Home = () => {
   const [latestBills, setLatestBills] = useState([]);
@@ -138,6 +154,8 @@ const Home = () => {
           </div>
         </div>
       </section>
+            {/* Add Latest IVOD Section here, before Policy Issues */}
+      <LatestIvodSection />
        {/* 最新法案區塊 */}
        <section className="py-16 bg-gradient-to-b from-white to-gray-50">
         <div className="container mx-auto px-4">
