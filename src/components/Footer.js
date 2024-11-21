@@ -31,16 +31,16 @@ const Footer = () => {
             <ul className="space-y-2">
               <li className="flex items-center">
                 <MapPin size={20} className="mr-2" />
-                台北市中山區中山北路二段 123 號
+                台北市中正區青島東路1號
               </li>
               <li className="flex items-center">
                 <Phone size={20} className="mr-2" />
-                (02) 1234-5678
+                02-2358-8196
               </li>
               <li className="flex items-center">
                 <Mail size={20} className="mr-2" />
-                <a href="mailto:office@example.com" className="hover:text-indigo-600 transition duration-300">
-                  office@example.com
+                <a href="mailto:ly11275f@ly.gov.tw" className="hover:text-indigo-600 transition duration-300">
+                  ly11275f@ly.gov.tw
                 </a>
               </li>
             </ul>

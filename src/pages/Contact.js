@@ -115,7 +115,7 @@ const ContactUs = () => {
             </div>
             <div className="flex items-center">
               <Phone className="text-blue-500 mr-3" />
-              <span>(02) 1234-5678</span>
+              <span>02-2358-8196</span>
             </div>
             <div className="flex items-center">
               <MapPin className="text-blue-500 mr-3" />
