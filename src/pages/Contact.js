@@ -111,7 +111,7 @@ const ContactUs = () => {
           <div className="space-y-4">
             <div className="flex items-center">
               <Mail className="text-blue-500 mr-3" />
-              <span>xiao.ling.weng@example.com</span>
+              <span>ly11275f@ly.gov.tw</span>
             </div>
             <div className="flex items-center">
               <Phone className="text-blue-500 mr-3" />
