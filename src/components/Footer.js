@@ -11,9 +11,8 @@ const Footer = () => {
             <h3 className="text-xl font-semibold mb-4 text-indigo-600">翁曉玲立委</h3>
             <p className="mb-4">致力於為台灣的未來打造更美好的願景。</p>
             <div className="flex space-x-4">
-              <SocialLink href="#" icon={<Facebook size={20} />} />
-              <SocialLink href="#" icon={<Twitter size={20} />} />
-              <SocialLink href="#" icon={<Instagram size={20} />} />
+              <SocialLink href="https://www.facebook.com/p/%E7%BF%81%E6%9B%89%E7%8E%B2-Hsiao-Ling-Weng-61555223878555/" icon={<Facebook size={20} />} />
+              <SocialLink href="https://www.instagram.com/hsiao_ling_weng/" icon={<Instagram size={20} />} />
             </div>
           </div>
           <div>
