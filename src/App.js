@@ -15,7 +15,12 @@ import Proposals from './pages/Proposals';
 import VideoGallery from './pages/VideoGallery';
 import ConstructionLayout from './layouts/ConstructionLayout';
 import UnderConstruction from './pages/UnderConstruction';
-
+import LegislativeProcess from './pages/LegislativeProcess';
+import JudicialProcessReform from './pages/JudicialProcessReform';
+import NuclearPowerPolicy from './pages/NuclearPowerPolicy';
+import WuClauseRemoval from './pages/WuClauseRemoval';
+import KeyIssuesHub from './pages/KeyIssuesHub';
+import NotFound from './pages/NotFound';
 function App() {
   return (
     <Router>
@@ -29,6 +34,15 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/video-gallery" element={<VideoGallery />} />
             <Route path="/proposals" element={<Proposals />} /> 
+            <Route path='/proess' element={<LegislativeProcess />}/>
+            <Route path='/reform' element={<JudicialProcessReform />}/>
+            <Route path='/nuclearpower' element={<NuclearPowerPolicy />}/>
+            <Route path='/wuclause' element={<WuClauseRemoval />}/>
+            <Route path='/keyissue' element={<KeyIssuesHub />}/>
+
+
+
+            
             
             {/* Construction Area - Nested Routes */}
             <Route element={<ConstructionLayout />}>
@@ -41,10 +55,12 @@ function App() {
               <Route path="/past" element={<UnderConstruction />} />
               <Route path="/policy-issues" element={<UnderConstruction />} />
             </Route>
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <Footer />
       </div>
+
     </Router>
   );
 }
