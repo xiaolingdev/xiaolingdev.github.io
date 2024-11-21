@@ -20,8 +20,8 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><FooterLink to="/about">關於我們</FooterLink></li>
               <li><FooterLink to="/activities">最新活動</FooterLink></li>
-              <li><FooterLink to="/policy-issues">政策議題</FooterLink></li>
-              <li><FooterLink to="/achievements">政績</FooterLink></li>
+              <li><FooterLink to="/video-gallery">質詢追進</FooterLink></li>
+              <li><FooterLink to="/proposals">法案總攬</FooterLink></li>
               <li><FooterLink to="/contact">聯絡我們</FooterLink></li>
             </ul>
           </div>

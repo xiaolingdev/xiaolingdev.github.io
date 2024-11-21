@@ -103,7 +103,7 @@ const Home = () => {
   return (
     <div className="bg-gray-50">
       <section className="relative h-screen">
-        <img src="/images/hero-image.webp" alt="翁曉玲立委" className="w-full h-full object-cover" />
+        <img src="/images/logo.jpg" alt="翁曉玲立委" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black bg-opacity-50" />
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center">
           <h1 className="text-6xl font-bold mb-4">翁曉玲</h1>

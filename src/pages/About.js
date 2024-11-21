@@ -50,14 +50,14 @@ const AboutXiaoling = () => {
     <div className="bg-gray-50">
       <section className="relative h-[60vh]">
         <img 
-          src={legislatorData?.照片位址 || "/images/hero-image.webp"} 
+          src={"/images/logo.jpg"} 
           alt={`立法委員${legislatorData?.委員姓名}`} 
           className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-end items-center text-white text-center p-8">
           <h1 className="text-5xl sm:text-6xl font-bold mb-4">{legislatorData?.委員姓名}</h1>
-          <p className="text-2xl sm:text-3xl text-gray-200 mb-2">{legislatorData?.委員英文姓名}</p>
+          <p className="text-2xl sm:text-3xl text-gray-200 mb-2">{"Weng, Hsiao-Ling"}</p>
           <p className="text-xl text-gray-200">第{legislatorData?.屆}屆立法委員</p>
         </div>
       </section>

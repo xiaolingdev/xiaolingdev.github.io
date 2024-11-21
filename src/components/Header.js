@@ -81,21 +81,9 @@ const Header = () => {
           <nav className="hidden md:flex md:items-center md:space-x-8">
             <NavLink to="/">首頁</NavLink>
             <NavLink to="/about">關於</NavLink>
-            <DropdownNavLink
-              title="活動報名"
-              items={activitiesItems}
-              isActive={activeDropdown === 'activities'}
-              onClick={(e) => toggleDropdown('activities', e)}
-              onNavigation={handleNavigation}
-            />
-            <NavLink to="/policy-issues">政策議題</NavLink>
-            <DropdownNavLink
-              title="目前績效"
-              items={achievementsItems}
-              isActive={activeDropdown === 'achievements'}
-              onClick={(e) => toggleDropdown('achievements', e)}
-              onNavigation={handleNavigation}
-            />
+            <NavLink to="/video-gallery">質詢影音</NavLink>
+            <NavLink to="/proposals">法案進度</NavLink>
+            <NavLink to="/activities">最新消息</NavLink>
             <NavLink to="/contact">民眾服務</NavLink>
             <Link 
               to="/ai-chat" 
