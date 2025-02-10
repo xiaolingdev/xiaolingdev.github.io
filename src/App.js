@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes,useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes,useLocation,useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -24,12 +25,16 @@ import NotFound from './pages/NotFound';
 import SafetyCheck from './pages/SafetyCheck';
 function RedirectHandler() {
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const redirectPath = searchParams.get('redirect');
 
-  if (redirectPath) {
-    window.history.replaceState(null, '', redirectPath);
-  }
+  useEffect(() => {
+    if (redirectPath) {
+      const decodedPath = decodeURIComponent(redirectPath);
+      navigate(decodedPath, { replace: true });
+    }
+  }, [redirectPath, navigate]);
 
   return null;
 }
