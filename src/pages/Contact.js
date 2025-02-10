@@ -1,6 +1,6 @@
-// ContactUs.jsx
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import emailjs from 'emailjs-com';
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +9,7 @@ const ContactUs = () => {
     message: ''
   });
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [captchaValue, setCaptchaValue] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -20,34 +21,42 @@ const ContactUs = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitStatus('sending');
-
+  
+    const serviceId = 'service_e7hhk9e'; // 替換為 EmailJS 提供的 service ID
+    const templateId = 'template_phf8mba'; // 替換為 EmailJS 提供的 template ID
+    const publicKey = 'rO-ByShZRbYP51mGb'; // 替換為 EmailJS 提供的 public key
+    const autoReplyTemplateId = 'template_ohx5jud'; // 替換為 EmailJS 自動回覆的 template ID
+    const recaptchaSiteKey = '6LeOxNIqAAAAANXAyHnYCkDGMSFgGuFOvqKl1PaR'; // 替換為你的 Google reCAPTCHA v3 金鑰
+  
     try {
-      const response = await fetch('http://localhost:3000/api/contact/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
-          status: 'pending' // 根據 API 規格添加狀態字段
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to send message');
+      // 確保 grecaptcha 已加載
+      if (!window.grecaptcha) {
+        throw new Error('Google reCAPTCHA 尚未加載，請稍後再試');
       }
-
+  
+      // 取得 reCAPTCHA v3 驗證碼
+      const recaptchaToken = await window.grecaptcha.execute(recaptchaSiteKey, { action: 'submit' });
+      setCaptchaValue(recaptchaToken);
+  
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        message: formData.message,
+        date: new Date().toLocaleString(),
+        'g-recaptcha-response': recaptchaToken,
+      };
+  
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      await emailjs.send(serviceId, autoReplyTemplateId, templateParams, publicKey);
       setFormData({ name: '', email: '', message: '' });
+      setCaptchaValue(null);
       setSubmitStatus('success');
-    } catch (err) {
-      console.error('Error sending message:', err);
+    } catch (error) {
+      console.error('Error sending message:', error);
       setSubmitStatus('error');
     }
   };
+  
 
   return (
     <div className="container mx-auto px-4 py-8 bg-gray-50">
