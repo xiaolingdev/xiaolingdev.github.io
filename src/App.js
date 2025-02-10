@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes,useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -22,10 +22,22 @@ import WuClauseRemoval from './pages/WuClauseRemoval';
 import KeyIssuesHub from './pages/KeyIssuesHub';
 import NotFound from './pages/NotFound';
 import SafetyCheck from './pages/SafetyCheck';
+function RedirectHandler() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get('redirect');
+
+  if (redirectPath) {
+    window.history.replaceState(null, '', redirectPath);
+  }
+
+  return null;
+}
 
 function App() {
   return (
     <Router>
+       <RedirectHandler />
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow">
