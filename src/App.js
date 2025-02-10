@@ -21,6 +21,8 @@ import NuclearPowerPolicy from './pages/NuclearPowerPolicy';
 import WuClauseRemoval from './pages/WuClauseRemoval';
 import KeyIssuesHub from './pages/KeyIssuesHub';
 import NotFound from './pages/NotFound';
+import SafetyCheck from './pages/SafetyCheck';
+
 function App() {
   return (
     <Router>
@@ -39,6 +41,8 @@ function App() {
             <Route path='/nuclearpower' element={<NuclearPowerPolicy />}/>
             <Route path='/wuclause' element={<WuClauseRemoval />}/>
             <Route path='/keyissue' element={<KeyIssuesHub />}/>
+            <Route path="/safety-check" element={<SafetyCheck />} />
+
 
 
 
