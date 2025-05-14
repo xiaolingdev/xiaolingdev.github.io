@@ -126,34 +126,6 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="bg-white py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold mb-12 text-center text-gray-800">最新活動</h2>
-          <div className="space-y-16">
-            {newsItems.map((item, index) => (
-              <div key={item.id} className="flex items-start">
-                <div className="flex-shrink-0 w-24 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg">
-                    <Calendar size={32} />
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-gray-500">{item.date}</p>
-                </div>
-                <div className="ml-8 flex-grow">
-                  <div className={`h-full border-l-2 border-indigo-200 pl-8 ${index === newsItems.length - 1 ? '' : 'pb-16'}`}>
-                    <h3 className="text-2xl font-semibold mb-3 text-gray-800">{item.title}</h3>
-                    <p className="text-lg text-gray-600 leading-relaxed">{item.summary}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-12">
-            <Link to="/activities" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition duration-300 text-lg font-semibold">
-              查看更多活動 <ArrowRight className="ml-2" />
-            </Link>
-          </div>
-        </div>
-      </section>
             {/* Add Latest IVOD Section here, before Policy Issues */}
       <LatestIvodSection />
        {/* 最新法案區塊 */}

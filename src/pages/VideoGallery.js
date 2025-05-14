@@ -2,7 +2,65 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
-import { ArrowLeft, ArrowRight, Calendar, Clock, Tag, Video } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, Tag, Video, Maximize2 } from 'lucide-react';
+import VideoModal from './VideoModal';
+
+// 全局樣式 - 您可以將其移至獨立的CSS文件
+const captionsStyles = `
+  .vjs-caption-overlay {
+    position: absolute;
+    bottom: 70px;
+    left: 10%;
+    right: 10%;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    text-align: center;
+    z-index: 1;
+    border-radius: 4px;
+    transition: opacity 0.3s;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+  
+  .transcription-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+  }
+  
+  .transcription-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: #4f46e5;
+    color: white;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+    margin-left: 8px;
+  }
+  
+  .transcription-button:hover {
+    background: #4338ca;
+  }
+  
+  .transcription-button:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+`;
 
 const VideoGallery = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -10,8 +68,27 @@ const VideoGallery = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [totalItems, setTotalItems] = useState(0);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const videoRefs = useRef([]);
+  const styleRef = useRef(null);
   const itemsPerPage = 6;
+
+  // 初始化樣式
+  useEffect(() => {
+    if (!styleRef.current) {
+      const styleElement = document.createElement('style');
+      styleElement.textContent = captionsStyles;
+      document.head.appendChild(styleElement);
+      styleRef.current = styleElement;
+    }
+
+    return () => {
+      if (styleRef.current) {
+        document.head.removeChild(styleRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -91,6 +168,22 @@ const VideoGallery = () => {
     });
   };
 
+  const handleVideoClick = (video) => {
+    // 如果當前有播放中的影片，先暫停
+    videoRefs.current.forEach(ref => {
+      if (ref && ref.player) {
+        ref.player.pause();
+      }
+    });
+    setSelectedVideo(video);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedVideo(null);
+  };
+
   const displayVideos = () => {
     if (loading) {
       return Array(itemsPerPage).fill(0).map((_, index) => (
@@ -127,16 +220,25 @@ const VideoGallery = () => {
 
     return pageVideos.map((video, index) => (
       <div key={video.IVOD_ID || index} className="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-        <div className="aspect-w-16 aspect-h-9">
-          <video
-            ref={el => videoRefs.current[index] = el}
-            className="video-js vjs-default-skin vjs-big-play-centered w-full h-full object-cover"
+        <div className="relative group">
+          <div className="aspect-w-16 aspect-h-9">
+            <video
+              ref={el => videoRefs.current[index] = el}
+              className="video-js vjs-default-skin vjs-big-play-centered w-full h-full object-cover"
+            >
+              <source src={video.video_url} type="application/x-mpegURL" />
+              <p className="vjs-no-js">
+                請啟用JavaScript並使用支援HTML5的瀏覽器以觀看影片
+              </p>
+            </video>
+          </div>
+          <button
+            onClick={() => handleVideoClick(video)}
+            className="absolute top-2 right-2 p-2 bg-black bg-opacity-50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-opacity-70"
+            title="放大觀看並開啟即時字幕"
           >
-            <source src={video.video_url} type="application/x-mpegURL" />
-            <p className="vjs-no-js">
-              請啟用JavaScript並使用支援HTML5的瀏覽器以觀看影片
-            </p>
-          </video>
+            <Maximize2 size={20} />
+          </button>
         </div>
         <div className="p-4">
           <h3 className="text-lg font-semibold mb-2 text-gray-800 hover:text-indigo-600 transition duration-300 line-clamp-2">
@@ -162,15 +264,6 @@ const VideoGallery = () => {
                 </div>
               </div>
             )}
-            <a 
-              href={video.IVOD_URL} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800 transition duration-300"
-            >
-              <Video size={16} className="mr-1" />
-              立院影片連結
-            </a>
           </div>
         </div>
       </div>
@@ -233,6 +326,12 @@ const VideoGallery = () => {
           </div>
         )}
       </div>
+      
+      <VideoModal 
+        video={selectedVideo}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };
