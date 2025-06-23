@@ -44,9 +44,9 @@ const Header = () => {
     { title: '質詢影音', path: '/video-gallery' },
   ];
 
-  const activitiesItems = [
-    { title: '活動回顧', path: '/past' },
-    { title: '活動報名', path: '/activities' },
+  const joinUsItems = [
+    { title: '職缺機會', path: '/join-us' },
+    { title: '實習計畫', path: '/internship' },
   ];
 
   return (
@@ -83,7 +83,7 @@ const Header = () => {
             <NavLink to="/about">關於</NavLink>
             <NavLink to="/video-gallery">質詢影音</NavLink>
             <NavLink to="/proposals">法案進度</NavLink>
-            <NavLink to="/activities">最新消息</NavLink>
+            <NavLink to="/join-us">加入我們</NavLink>
             <NavLink to="/contact">民眾服務</NavLink>
             <Link 
               to="/ai-chat" 
@@ -107,10 +107,10 @@ const Header = () => {
             <MobileNavLink onClick={() => handleNavigation('/')}>首頁</MobileNavLink>
             <MobileNavLink onClick={() => handleNavigation('/about')}>關於</MobileNavLink>
             <MobileDropdownNavLink
-              title="活動報名"
-              items={activitiesItems}
-              isActive={activeDropdown === 'mobile-activities'}
-              onClick={(e) => toggleDropdown('mobile-activities', e)}
+              title="加入我們"
+              items={joinUsItems}
+              isActive={activeDropdown === 'mobile-join-us'}
+              onClick={(e) => toggleDropdown('mobile-join-us', e)}
               onNavigation={handleNavigation}
             />
             <MobileNavLink onClick={() => handleNavigation('/policy-issues')}>

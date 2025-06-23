@@ -23,6 +23,7 @@ import WuClauseRemoval from './pages/WuClauseRemoval';
 import KeyIssuesHub from './pages/KeyIssuesHub';
 import NotFound from './pages/NotFound';
 import SafetyCheck from './pages/SafetyCheck';
+import JoinUs from './pages/JoinUs';
 function RedirectHandler() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ function App() {
             <Route path='/wuclause' element={<WuClauseRemoval />}/>
             <Route path='/keyissue' element={<KeyIssuesHub />}/>
             <Route path="/safety-check" element={<SafetyCheck />} />
+            <Route path="/join-us" element={<JoinUs />} />
 
 
 
