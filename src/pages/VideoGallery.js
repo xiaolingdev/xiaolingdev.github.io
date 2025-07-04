@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
-import { ArrowLeft, ArrowRight, Calendar, Clock, Tag, Video, Search, Filter, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, Tag, Video, Search, Filter, X, Play } from 'lucide-react';
 
 const VideoGallery = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -12,6 +12,7 @@ const VideoGallery = () => {
   const [error, setError] = useState(null);
   const [totalItems, setTotalItems] = useState(0);
   const videoRefs = useRef([]);
+  const modalVideoRef = useRef(null);
   const itemsPerPage = 6;
 
   // 搜尋和篩選狀態
@@ -20,6 +21,23 @@ const VideoGallery = () => {
   const [dateFilter, setDateFilter] = useState({ start: '', end: '' });
   const [sessionFilter, setSessionFilter] = useState('');
   const [termFilter, setTermFilter] = useState('');
+
+  // 手機版影片播放Modal狀態
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 檢測是否為手機設備
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -86,8 +104,10 @@ const VideoGallery = () => {
     setCurrentPage(1); // 重置到第一頁
   }, [searchTerm, dateFilter, termFilter, sessionFilter, videos]);
 
-  // 修復播放器初始化邏輯
+  // 修復播放器初始化邏輯 (僅電腦版)
   useEffect(() => {
+    if (isMobile) return; // 手機版不初始化嵌入式播放器
+    
     // 安全清理現有播放器
     videoRefs.current.forEach(ref => {
       if (ref && ref.player && typeof ref.player.dispose === 'function') {
@@ -156,7 +176,80 @@ const VideoGallery = () => {
         }
       });
     };
-  }, [filteredVideos, currentPage]);
+  }, [filteredVideos, currentPage, isMobile]);
+
+  // Modal播放器初始化
+  useEffect(() => {
+    if (showVideoModal && selectedVideo && modalVideoRef.current && !modalVideoRef.current.player) {
+      try {
+        const player = videojs(modalVideoRef.current, {
+          controls: true,
+          autoplay: true,
+          preload: 'auto',
+          fluid: true,
+          responsive: true,
+          playbackRates: [0.5, 1, 1.5, 2],
+          controlBar: {
+            children: [
+              'playToggle',
+              'volumePanel',
+              'currentTimeDisplay',
+              'timeDivider',
+              'durationDisplay',
+              'progressControl',
+              'playbackRateMenuButton',
+              'fullscreenToggle',
+            ],
+          },
+        });
+
+        modalVideoRef.current.player = player;
+      } catch (error) {
+        console.warn('Error initializing modal player:', error);
+      }
+    }
+
+    return () => {
+      if (modalVideoRef.current && modalVideoRef.current.player) {
+        try {
+          if (!modalVideoRef.current.player.isDisposed()) {
+            modalVideoRef.current.player.dispose();
+          }
+        } catch (error) {
+          console.warn('Error disposing modal player:', error);
+        }
+        modalVideoRef.current.player = null;
+      }
+    };
+  }, [showVideoModal, selectedVideo]);
+
+  // 組件卸載時清理所有播放器
+  useEffect(() => {
+    return () => {
+      videoRefs.current.forEach(ref => {
+        if (ref && ref.player && typeof ref.player.dispose === 'function') {
+          try {
+            if (!ref.player.isDisposed()) {
+              ref.player.dispose();
+            }
+          } catch (error) {
+            console.warn('Error disposing player on unmount:', error);
+          }
+        }
+      });
+      videoRefs.current = [];
+      
+      if (modalVideoRef.current && modalVideoRef.current.player) {
+        try {
+          if (!modalVideoRef.current.player.isDisposed()) {
+            modalVideoRef.current.player.dispose();
+          }
+        } catch (error) {
+          console.warn('Error disposing modal player on unmount:', error);
+        }
+      }
+    };
+  }, []);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -165,6 +258,20 @@ const VideoGallery = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  // 處理影片點擊
+  const handleVideoClick = (video) => {
+    if (isMobile) {
+      setSelectedVideo(video);
+      setShowVideoModal(true);
+    }
+  };
+
+  // 關閉Modal
+  const closeVideoModal = () => {
+    setShowVideoModal(false);
+    setSelectedVideo(null);
   };
 
   // 清除所有篩選
@@ -228,21 +335,58 @@ const VideoGallery = () => {
 
     return pageVideos.map((video, index) => (
       <div key={video.IVOD_ID || index} className="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-        <div className="aspect-w-16 aspect-h-9">
-          <video
-            ref={el => {
-              if (el) {
-                videoRefs.current[index] = el;
-              }
-            }}
-            className="video-js vjs-default-skin vjs-big-play-centered w-full h-full object-cover"
-          >        className="video-js vjs-default-skin vjs-big-play-centered w-full h-full object-cover"
-          >
-            <source src={video.video_url} type="application/x-mpegURL" />
-            <p className="vjs-no-js">
-              請啟用JavaScript並使用支援HTML5的瀏覽器以觀看影片
-            </p>
-          </video>
+        <div className="aspect-w-16 aspect-h-9 relative">
+          {isMobile ? (
+            // 手機版：顯示縮圖和播放按鈕
+            <div 
+              className="relative w-full h-full cursor-pointer group overflow-hidden"
+              onClick={() => handleVideoClick(video)}
+            >
+              {/* 影片縮圖 */}
+              <video
+                className="w-full h-full object-cover"
+                preload="metadata"
+                muted
+                playsInline
+              >
+                <source src={video.video_url} type="application/x-mpegURL" />
+              </video>
+              
+              {/* 播放覆蓋層 */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 group-hover:bg-opacity-50 transition-all duration-300">
+                <div className="w-20 h-20 bg-white bg-opacity-95 rounded-full flex items-center justify-center group-hover:scale-110 group-hover:bg-opacity-100 transition-all duration-300 shadow-lg">
+                  <Play className="w-10 h-10 text-gray-700 ml-1" fill="currentColor" />
+                </div>
+              </div>
+              
+              {/* 播放提示 */}
+              <div className="absolute top-3 left-3 bg-black bg-opacity-75 text-white px-3 py-1 rounded-full text-xs font-medium">
+                點擊播放
+              </div>
+              
+              {/* 時長顯示（如果有的話） */}
+              {video.委員發言時間 && (
+                <div className="absolute bottom-3 right-3 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs">
+                  {video.委員發言時間}
+                </div>
+              )}
+            </div>
+          ) : (
+            // 電腦版：嵌入式播放器
+            <video
+              ref={el => {
+                if (el) {
+                  videoRefs.current[index] = el;
+                }
+              }}
+              className="video-js vjs-default-skin vjs-big-play-centered w-full h-full object-cover"
+            >
+              <source src={video.video_url} type="application/x-mpegURL" />
+              <p className="vjs-no-js">
+                請啟用JavaScript並使用支援HTML5的瀏覽器以觀看影片
+              </p>
+            </video>
+          )}
         </div>
         <div className="p-4">
           <h3 className="text-lg font-semibold mb-2 text-gray-800 hover:text-indigo-600 transition duration-300 line-clamp-2">
@@ -431,6 +575,63 @@ const VideoGallery = () => {
           </div>
         )}
       </div>
+
+      {/* 手機版影片播放 Modal */}
+      {showVideoModal && selectedVideo && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center">
+          <div className="relative w-full h-full max-w-full max-h-full">
+            {/* 關閉按鈕 */}
+            <button
+              onClick={closeVideoModal}
+              className="absolute top-4 right-4 z-50 w-12 h-12 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all duration-300"
+            >
+              <X size={24} />
+            </button>
+            
+            {/* 影片標題 */}
+            <div className="absolute top-4 left-4 right-16 z-40 bg-black bg-opacity-50 text-white p-3 rounded">
+              <h3 className="text-lg font-semibold line-clamp-2">{selectedVideo.會議名稱}</h3>
+              <p className="text-sm opacity-80 mt-1">{formatDate(selectedVideo.日期)}</p>
+            </div>
+
+            {/* 影片播放器 */}
+            <div className="w-full h-full flex items-center justify-center p-4 pt-20">
+              <div className="w-full max-w-full" style={{ aspectRatio: '16/9' }}>
+                <video
+                  ref={modalVideoRef}
+                  className="video-js vjs-default-skin w-full h-full"
+                  controls
+                  data-setup="{}"
+                >
+                  <source src={selectedVideo.video_url} type="application/x-mpegURL" />
+                  <p className="vjs-no-js">
+                    請啟用JavaScript並使用支援HTML5的瀏覽器以觀看影片
+                  </p>
+                </video>
+              </div>
+            </div>
+
+            {/* 影片資訊 */}
+            <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-50 text-white p-3 rounded">
+              <div className="flex items-center space-x-4 text-sm">
+                <div className="flex items-center">
+                  <Clock size={16} className="mr-1" />
+                  <span>{selectedVideo.委員發言時間}</span>
+                </div>
+                {selectedVideo.會議資料 && (
+                  <div className="flex items-center">
+                    <Tag size={16} className="mr-1" />
+                    <span>第{selectedVideo.會議資料.屆}屆第{selectedVideo.會議資料.會期}會期</span>
+                  </div>
+                )}
+              </div>
+              {selectedVideo.會議資料?.標題 && (
+                <p className="text-sm mt-2 opacity-80 line-clamp-2">{selectedVideo.會議資料.標題}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
