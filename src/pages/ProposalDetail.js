@@ -100,12 +100,13 @@ const TimelineIndicator = ({ startDate, lastUpdateDate }) => {
     </div>
   );
 };
+
 const ProposalDetail = ({ isOpen, onClose, proposalId }) => {
     const [proposalDetail, setProposalDetail] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('info'); // 'info' or 'comparison'
-  
+
     useEffect(() => {
       const fetchProposalDetail = async () => {
         if (!proposalId) return;
@@ -125,10 +126,19 @@ const ProposalDetail = ({ isOpen, onClose, proposalId }) => {
           setLoading(false);
         }
       };
-  
+
       fetchProposalDetail();
     }, [proposalId]);
-  
+
+    // 當modal打開時，更新URL
+    useEffect(() => {
+      if (isOpen && proposalId) {
+        const url = new URL(window.location);
+        url.searchParams.set('proposalId', proposalId);
+        window.history.pushState({}, '', url);
+      }
+    }, [isOpen, proposalId]);
+
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       return date.toLocaleDateString('zh-TW', {
@@ -137,12 +147,12 @@ const ProposalDetail = ({ isOpen, onClose, proposalId }) => {
         day: 'numeric'
       });
     };
-  
+
     // 判斷是否為新法案
     const isNewLaw = (table) => {
       return table.立法種類 === '增訂條文';
     };
-  
+
     // 渲染條文內容區塊
     const renderArticleContent = (row, isNew) => {
       if (isNew) {
@@ -158,7 +168,7 @@ const ProposalDetail = ({ isOpen, onClose, proposalId }) => {
           </div>
         );
       }
-  
+
       return (
         <div className="space-y-4">
           <div>
@@ -176,11 +186,11 @@ const ProposalDetail = ({ isOpen, onClose, proposalId }) => {
         </div>
       );
     };
-  
+
     // 渲染修正條文對照表
     const renderComparisonTable = (table, tableIndex) => {
       const isNew = isNewLaw(table);
-  
+
       return (
         <div key={tableIndex} className="space-y-6 bg-white rounded-lg shadow-sm">
           <div className="p-4 border-b border-gray-200">
@@ -193,7 +203,7 @@ const ProposalDetail = ({ isOpen, onClose, proposalId }) => {
               )}
             </div>
           </div>
-  
+
           <div className="p-4 space-y-8">
             {table.rows.map((row, rowIndex) => (
               <div key={rowIndex} className="border rounded-lg overflow-hidden bg-gray-50">
@@ -202,7 +212,7 @@ const ProposalDetail = ({ isOpen, onClose, proposalId }) => {
                   <div className="space-y-4">
                     {renderArticleContent(row, isNew)}
                   </div>
-  
+
                   {/* 右側：說明 */}
                   <div className="space-y-4">
                     <h5 className="font-medium text-gray-700">
@@ -221,6 +231,7 @@ const ProposalDetail = ({ isOpen, onClose, proposalId }) => {
         </div>
       );
     };
+
     if (!isOpen) return null;
 
   return (

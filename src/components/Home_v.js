@@ -13,13 +13,21 @@ import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 // 添加通用的 formatDate 函數
 const formatDate = (dateString) => {
+  if (!dateString) return '無日期';
+  
+  try {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '日期格式錯誤';
+    
     return date.toLocaleDateString('zh-TW', {
       year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      month: '2-digit',
+      day: '2-digit'
     });
-  };
+  } catch (error) {
+    return '日期解析錯誤';
+  }
+};
 // VideoCard.js
 const VideoCard = ({ video, index, onExpandClick }) => {
     const videoRef = useRef(null);
