@@ -173,13 +173,13 @@ const Home = () => {
         <div className="flex items-center justify-center space-x-6 pt-4">
           <div className="text-center">
             <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 backdrop-blur-sm">
-              <span className="text-white text-sm font-bold">政</span>
+              <span className="text-white text-sm font-bold">策</span>
             </div>
             <span className="text-xs text-blue-200">政策倡議</span>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 backdrop-blur-sm">
-              <span className="text-white text-sm font-bold">民</span>
+              <span className="text-white text-sm font-bold">意</span>
             </div>
             <span className="text-xs text-blue-200">民意代表</span>
           </div>
