@@ -103,16 +103,97 @@ const Home = () => {
   return (
     <div className="bg-gray-50">
       <section className="relative h-screen">
-        <img src="/images/logo.jpg" alt="翁曉玲立委" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black bg-opacity-50" />
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center">
-          <h1 className="text-6xl font-bold mb-4">翁曉玲</h1>
-          <p className="text-3xl mb-8">為台灣的未來而努力</p>
-          <Link to="/about" className="bg-white text-gray-800 px-8 py-3 rounded-full text-lg font-semibold hover:bg-gray-200 transition duration-300">
-            了解更多
-          </Link>
+  {/* 電腦版背景圖與遮罩 */}
+  <img
+    src="/images/logo.jpg"
+    alt="翁曉玲立委"
+    className="hidden md:block w-full h-full object-cover"
+  />
+  <div className="hidden md:block absolute inset-0 bg-black bg-opacity-50" />
+  
+  {/* 手機版背景設計 */}
+  <div className="md:hidden absolute inset-0 bg-gradient-to-br from-blue-900 via-indigo-800 to-slate-900" />
+  <div className="md:hidden absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+  
+  {/* 手機版裝飾元素 */}
+  <div className="md:hidden absolute top-0 left-0 w-full h-full overflow-hidden">
+    <div className="absolute top-20 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+    <div className="absolute bottom-32 -right-16 w-64 h-64 bg-indigo-400/10 rounded-full blur-2xl" />
+    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+  </div>
+  
+  {/* 手機版網格背景 */}
+  <div className="md:hidden absolute inset-0 opacity-20">
+    <div className="absolute inset-0" style={{
+      backgroundImage: `
+        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+      `,
+      backgroundSize: '40px 40px'
+    }} />
+  </div>
+  
+  {/* 文字內容（電腦與手機分開處理） */}
+  <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-4">
+    {/* 電腦版 */}
+    <div className="hidden md:flex flex-col text-white">
+      <h1 className="text-6xl font-bold mb-4">翁曉玲</h1>
+      <p className="text-3xl mb-8">為台灣的未來而努力</p>
+      <Link
+        to="/about"
+        className="bg-white text-gray-800 px-8 py-3 rounded-full text-lg font-semibold hover:bg-gray-200 transition duration-300"
+      >
+        了解更多
+      </Link>
+    </div>
+    
+    {/* 手機版 */}
+    <div className="md:hidden flex flex-col text-white relative z-10">
+      <div className="mb-8">
+        <div className="inline-block px-4 py-2 bg-blue-500/20 rounded-full border border-blue-300/30 mb-4">
+          <span className="text-blue-200 text-sm font-medium">立法委員</span>
         </div>
-      </section>
+        <h1 className="text-5xl font-black mb-3 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+          翁曉玲
+        </h1>
+        <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-indigo-400 mx-auto rounded-full mb-4" />
+        <p className="text-xl text-blue-100 font-medium leading-relaxed">
+          為台灣的未來而努力
+        </p>
+      </div>
+      
+      <div className="space-y-4">
+        <Link
+          to="/about"
+          className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
+        >
+          了解更多
+        </Link>
+        
+        <div className="flex items-center justify-center space-x-6 pt-4">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 backdrop-blur-sm">
+              <span className="text-white text-sm font-bold">政</span>
+            </div>
+            <span className="text-xs text-blue-200">政策倡議</span>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 backdrop-blur-sm">
+              <span className="text-white text-sm font-bold">民</span>
+            </div>
+            <span className="text-xs text-blue-200">民意代表</span>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 backdrop-blur-sm">
+              <span className="text-white text-sm font-bold">服</span>
+            </div>
+            <span className="text-xs text-blue-200">民眾服務</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
       <section className="container mx-auto px-4 py-16">
         <h2 className="text-4xl font-bold mb-8 text-center text-gray-800">關於我們</h2>
