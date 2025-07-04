@@ -39,14 +39,14 @@ const Header = () => {
     navigate(path);
   };
 
-  const achievementsItems = [
-    { title: '立法成果', path: '/proposals' },
+  // 統一的導航項目配置
+  const navigationItems = [
+    { title: '首頁', path: '/' },
+    { title: '關於', path: '/about' },
     { title: '質詢影音', path: '/video-gallery' },
-  ];
-
-  const joinUsItems = [
-    { title: '職缺機會', path: '/join-us' },
-    { title: '實習計畫', path: '/internship' },
+    { title: '法案進度', path: '/proposals' },
+    { title: '加入我們', path: '/join-us' },
+    { title: '民眾服務', path: '/contact' },
   ];
 
   return (
@@ -79,12 +79,11 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex md:items-center md:space-x-8">
-            <NavLink to="/">首頁</NavLink>
-            <NavLink to="/about">關於</NavLink>
-            <NavLink to="/video-gallery">質詢影音</NavLink>
-            <NavLink to="/proposals">法案進度</NavLink>
-            <NavLink to="/join-us">加入我們</NavLink>
-            <NavLink to="/contact">民眾服務</NavLink>
+            {navigationItems.map((item) => (
+              <NavLink key={item.path} to={item.path}>
+                {item.title}
+              </NavLink>
+            ))}
             <Link 
               to="/ai-chat" 
               className="p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-md"
@@ -104,27 +103,13 @@ const Header = () => {
       >
         <nav className="bg-white border-t border-gray-200">
           <div className="container mx-auto px-4 py-2 space-y-1">
-            <MobileNavLink onClick={() => handleNavigation('/')}>首頁</MobileNavLink>
-            <MobileNavLink onClick={() => handleNavigation('/about')}>關於</MobileNavLink>
-            <MobileDropdownNavLink
-              title="加入我們"
-              items={joinUsItems}
-              isActive={activeDropdown === 'mobile-join-us'}
-              onClick={(e) => toggleDropdown('mobile-join-us', e)}
-              onNavigation={handleNavigation}
-            />
-            <MobileNavLink onClick={() => handleNavigation('/policy-issues')}>
-              政策議題
-            </MobileNavLink>
-            <MobileDropdownNavLink
-              title="目前績效"
-              items={achievementsItems}
-              isActive={activeDropdown === 'mobile-achievements'}
-              onClick={(e) => toggleDropdown('mobile-achievements', e)}
-              onNavigation={handleNavigation}
-            />
-            <MobileNavLink onClick={() => handleNavigation('/contact')}>
-              民眾服務
+            {navigationItems.map((item) => (
+              <MobileNavLink key={item.path} onClick={() => handleNavigation(item.path)}>
+                {item.title}
+              </MobileNavLink>
+            ))}
+            <MobileNavLink onClick={() => handleNavigation('/ai-chat')}>
+              AI聊天
             </MobileNavLink>
           </div>
         </nav>
@@ -151,51 +136,6 @@ const NavLink = ({ to, children }) => {
   );
 };
 
-const DropdownNavLink = ({ title, items, isActive, onClick, onNavigation }) => {
-  const dropdownRef = useRef(null);
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={onClick}
-        className={`px-3 py-2 rounded-md text-sm font-medium flex items-center transition duration-150 ease-in-out
-          ${isActive 
-            ? 'text-blue-600 bg-blue-50' 
-            : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-          }`}
-        aria-expanded={isActive}
-      >
-        {title}
-        <ChevronDown
-          size={16}
-          className={`ml-1 transform transition-transform duration-200 ${
-            isActive ? 'rotate-180' : ''
-          }`}
-        />
-      </button>
-      
-      <div
-        className={`absolute top-full left-0 mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 transition-all duration-200 ${
-          isActive ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
-        }`}
-      >
-        <div className="py-1" role="menu">
-          {items.map((item, index) => (
-            <button
-              key={index}
-              onClick={() => onNavigation(item.path)}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150"
-              role="menuitem"
-            >
-              {item.title}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const MobileNavLink = ({ onClick, children }) => (
   <button
     onClick={onClick}
@@ -203,42 +143,6 @@ const MobileNavLink = ({ onClick, children }) => (
   >
     {children}
   </button>
-);
-
-const MobileDropdownNavLink = ({ title, items, isActive, onClick, onNavigation }) => (
-  <div className="space-y-1">
-    <button
-      onClick={onClick}
-      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition duration-150 ease-in-out"
-      aria-expanded={isActive}
-    >
-      {title}
-      <ChevronDown
-        size={16}
-        className={`transform transition-transform duration-200 ${
-          isActive ? 'rotate-180' : ''
-        }`}
-      />
-    </button>
-    
-    <div
-      className={`transition-all duration-200 ${
-        isActive ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
-      }`}
-    >
-      <div className="pl-4 space-y-1">
-        {items.map((item, index) => (
-          <button
-            key={index}
-            onClick={() => onNavigation(item.path)}
-            className="block w-full text-left px-3 py-2 rounded-md text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition duration-150 ease-in-out"
-          >
-            {item.title}
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
 );
 
 export default Header;
