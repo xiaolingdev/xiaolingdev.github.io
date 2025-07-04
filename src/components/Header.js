@@ -69,7 +69,7 @@ const Header = () => {
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
             <Link 
-              to="https://claude.ai/public/artifacts/60aa68c8-741a-4e4c-8864-f591b66a40d6?fullscreen=true" 
+              to="https://claude.ai/public/artifacts/3fd60c8c-1e73-4ad3-b52c-7db2034d9108?fullscreen=true" 
               className="p-2 ml-2 text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-md"
               aria-label="AI聊天"
             >
@@ -85,7 +85,7 @@ const Header = () => {
               </NavLink>
             ))}
             <Link 
-              to="https://claude.ai/public/artifacts/60aa68c8-741a-4e4c-8864-f591b66a40d6?fullscreen=true" 
+              to="https://claude.ai/public/artifacts/3fd60c8c-1e73-4ad3-b52c-7db2034d9108?fullscreen=true" 
               className="p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded-md"
               aria-label="AI聊天"
             >
