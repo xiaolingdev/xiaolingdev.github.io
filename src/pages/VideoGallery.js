@@ -39,28 +39,47 @@ const VideoGallery = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    const fetchVideos = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('https://v2.ly.govapi.tw/ivods?委員名稱=翁曉玲');
-        if (!response.ok) {
-          throw new Error('Failed to fetch videos');
-        }
-        const data = await response.json();
-        setVideos(data.ivods || []);
-        setFilteredVideos(data.ivods || []);
-        setTotalItems(data.total || 0);
-      } catch (err) {
-        setError(err.message);
-        console.error('Error fetching videos:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchVideos = async () => {
+    try {
+      setLoading(true);
 
-    fetchVideos();
-  }, []);
+      // 先載入第一頁，取得 total_page
+      const firstPageRes = await fetch('https://v2.ly.govapi.tw/ivods?委員名稱=翁曉玲&page=1&limit=100');
+      if (!firstPageRes.ok) throw new Error('Failed to fetch videos (page 1)');
+      const firstPageData = await firstPageRes.json();
+
+      const totalPages = firstPageData.total_page || 1;
+      let allVideos = firstPageData.ivods || [];
+
+      // 並行載入第 2 頁到 totalPages
+      const remainingFetches = [];
+      for (let page = 2; page <= totalPages; page++) {
+        const url = `https://v2.ly.govapi.tw/ivods?委員名稱=翁曉玲&page=${page}&limit=100`;
+        remainingFetches.push(fetch(url).then(res => res.json()));
+      }
+
+      const remainingResults = await Promise.all(remainingFetches);
+      for (const result of remainingResults) {
+        if (result?.ivods) {
+          allVideos = allVideos.concat(result.ivods);
+        }
+      }
+
+      setVideos(allVideos);
+      setFilteredVideos(allVideos);
+      setTotalItems(allVideos.length);
+    } catch (err) {
+      setError(err.message || '載入失敗');
+      console.error('Error fetching all pages:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchVideos();
+}, []);
+
 
   // 搜尋和篩選邏輯
   useEffect(() => {
