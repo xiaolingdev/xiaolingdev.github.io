@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
-import { ArrowLeft, ArrowRight, Calendar, Clock, Tag, Video, Search, Filter, X, Play } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, Tag, Video, Search, Filter, X, Play, Subtitles } from 'lucide-react';
+
+
+// 模擬 HLS.js (在實際環境中這會從 CDN 載入)
+const HLS_AVAILABLE = typeof window !== 'undefined' && window.Hls;
 
 const VideoGallery = () => {
+
   const [currentPage, setCurrentPage] = useState(1);
   const [videos, setVideos] = useState([]);
   const [filteredVideos, setFilteredVideos] = useState([]);
@@ -13,6 +15,8 @@ const VideoGallery = () => {
   const [totalItems, setTotalItems] = useState(0);
   const videoRefs = useRef([]);
   const modalVideoRef = useRef(null);
+  const hlsInstances = useRef([]);
+  const modalHlsInstance = useRef(null);
   const itemsPerPage = 6;
 
   // 搜尋和篩選狀態
@@ -27,6 +31,28 @@ const VideoGallery = () => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  // 字幕相關狀態
+  const [transcripts, setTranscripts] = useState(new Map());
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
+  const [loadingTranscripts, setLoadingTranscripts] = useState(new Set());
+
+  // 載入 HLS.js
+  useEffect(() => {
+
+    if (!HLS_AVAILABLE) {
+            const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js';
+      script.onload = () => {
+
+      };
+      script.onerror = () => {
+        console.error('❌ DEBUG: Failed to load HLS.js');
+      };
+      document.head.appendChild(script);
+    } else {
+    }
+  }, []);
+
   // 檢測是否為手機設備
   useEffect(() => {
     const checkMobile = () => {
@@ -39,47 +65,407 @@ const VideoGallery = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-useEffect(() => {
-  const fetchVideos = async () => {
+  // 獲取字幕資料
+  const fetchTranscript = async (ivodId) => {
+        
+    if (transcripts.has(ivodId)) {
+            return transcripts.get(ivodId);
+    }
+    
+    if (loadingTranscripts.has(ivodId)) {
+            return transcripts.get(ivodId);
+    }
+
+    setLoadingTranscripts(prev => new Set([...prev, ivodId]));
+    
     try {
-      setLoading(true);
-
-      // 先載入第一頁，取得 total_page
-      const firstPageRes = await fetch('https://v2.ly.govapi.tw/ivods?委員名稱=翁曉玲&page=1&limit=100');
-      if (!firstPageRes.ok) throw new Error('Failed to fetch videos (page 1)');
-      const firstPageData = await firstPageRes.json();
-
-      const totalPages = firstPageData.total_page || 1;
-      let allVideos = firstPageData.ivods || [];
-
-      // 並行載入第 2 頁到 totalPages
-      const remainingFetches = [];
-      for (let page = 2; page <= totalPages; page++) {
-        const url = `https://v2.ly.govapi.tw/ivods?委員名稱=翁曉玲&page=${page}&limit=100`;
-        remainingFetches.push(fetch(url).then(res => res.json()));
+      const url = `https://ly.govapi.tw/v2/ivod/${ivodId}`;
+            
+      const response = await fetch(url);
+            
+      if (!response.ok) {
+        throw new Error(`Failed to fetch transcript for ${ivodId}: ${response.status}`);
       }
-
-      const remainingResults = await Promise.all(remainingFetches);
-      for (const result of remainingResults) {
-        if (result?.ivods) {
-          allVideos = allVideos.concat(result.ivods);
+      
+      const data = await response.json();
+                  
+      // 正確的資料結構：data.data.transcript 而不是 data.transcript
+      const transcriptData = data.data || data; // 支援兩種可能的結構
+      const transcript = transcriptData.transcript;
+      
+            
+      // 檢查各種可能的 transcript 位置
+      if (transcript) {
+                                
+        if (transcript.whisperx) {
+                            } else {
+                            }
+        
+        if (transcript.pyannote) {
+                            } else {
+                  }
+      } else {
+                        
+        // 檢查是否有其他可能的字段名稱
+        const possibleFields = ['transcripts', 'subtitle', 'subtitles', 'text', 'captions'];
+        for (const field of possibleFields) {
+          if (data[field] || (data.data && data.data[field])) {
+                      }
         }
       }
-
-      setVideos(allVideos);
-      setFilteredVideos(allVideos);
-      setTotalItems(allVideos.length);
-    } catch (err) {
-      setError(err.message || '載入失敗');
-      console.error('Error fetching all pages:', err);
+      
+      if (transcript && transcript.whisperx) {
+                        
+        const vttContent = generateVTT(transcript.whisperx);
+                        
+        const vttBlob = new Blob([vttContent], { type: 'text/vtt' });
+        const vttUrl = URL.createObjectURL(vttBlob);
+                
+        const finalTranscriptData = {
+          whisperx: transcript.whisperx,
+          pyannote: transcript.pyannote,
+          vttUrl: vttUrl,
+          vttContent: vttContent
+        };
+        
+        setTranscripts(prev => new Map([...prev, [ivodId, finalTranscriptData]]));
+                return finalTranscriptData;
+      } else {
+                                        if (data.data) {
+                  }
+                if (transcript) {
+                            }
+        
+        // 嘗試找到任何包含文字的字段
+        function findTextFields(obj, path = '') {
+          const textFields = [];
+          for (const [key, value] of Object.entries(obj)) {
+            const currentPath = path ? `${path}.${key}` : key;
+            if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+              const firstItem = value[0];
+              if (firstItem.text || firstItem.content || firstItem.transcript) {
+                textFields.push({ path: currentPath, sample: firstItem });
+              }
+            } else if (typeof value === 'object' && value !== null) {
+              textFields.push(...findTextFields(value, currentPath));
+            }
+          }
+          return textFields;
+        }
+        
+        const textFields = findTextFields(data);
+              }
+    } catch (error) {
+      console.error('💥 DEBUG: Error fetching transcript for', ivodId, ':', error);
     } finally {
-      setLoading(false);
+      setLoadingTranscripts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(ivodId);
+                return newSet;
+      });
     }
+    
+    return null;
   };
 
-  fetchVideos();
-}, []);
+// 在這裡加入
+const splitTextIntoTwoLineChunks = (text, maxLineLength = 20, maxLines = 2) => {
+  const chars = [...text];
+  const lines = [];
+  let line = '';
 
+  for (let i = 0; i < chars.length; i++) {
+    line += chars[i];
+    if (line.length >= maxLineLength || /[。！？；：]/.test(chars[i])) {
+      lines.push(line.trim());
+      line = '';
+    }
+  }
+
+  if (line) lines.push(line.trim());
+
+  // 每段最多兩行，超過的自動推成新段
+  const chunks = [];
+  for (let i = 0; i < lines.length; i += maxLines) {
+    const group = lines.slice(i, i + maxLines).join('\n');
+    chunks.push(group);
+  }
+
+  return chunks;
+};
+
+// 接著是你原本的字幕生成函式
+const generateVTT = (whisperxData) => {
+  let vtt = 'WEBVTT\n\n';
+  let cueIndex = 0;
+
+  for (let i = 0; i < whisperxData.length; i++) {
+    const segment = whisperxData[i];
+    const { start, end, text } = segment;
+
+    const duration = end - start;
+    const traditional = text;
+    const processedText = traditional;
+    const chunks = splitTextIntoTwoLineChunks(processedText); // 用新函式切段
+
+    const chunkDuration = duration / chunks.length;
+
+    chunks.forEach((chunk, index) => {
+      const chunkStart = start + (index * chunkDuration);
+      const chunkEnd = start + ((index + 1) * chunkDuration);
+      const startTime = formatTime(chunkStart);
+      const endTime = formatTime(chunkEnd);
+
+      vtt += `${cueIndex++}\n`;
+      vtt += `${startTime} --> ${endTime}\n`;
+      vtt += `${chunk}\n\n`;
+    });
+  }
+
+  return vtt;
+};
+
+
+const splitTextIntoChunks = (text, maxLength = 40) => {
+  const chunks = [];
+  let currentLine = '';
+
+  const chars = [...text];
+  for (let i = 0; i < chars.length; i++) {
+    currentLine += chars[i];
+    if (currentLine.length >= maxLength || /[。！？]/.test(chars[i])) {
+      chunks.push(currentLine.trim());
+      currentLine = '';
+    }
+  }
+  if (currentLine) chunks.push(currentLine.trim());
+
+  // 將兩行合併為一個字幕段落，使用換行符
+  const merged = [];
+  for (let i = 0; i < chunks.length; i += 2) {
+    if (i + 1 < chunks.length) {
+      merged.push(`${chunks[i]}\n${chunks[i + 1]}`);
+    } else {
+      merged.push(chunks[i]);
+    }
+  }
+
+  return merged;
+};
+
+  // 格式化時間為 VTT 格式
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const milliseconds = Math.floor((seconds % 1) * 1000);
+    
+    const formatted = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+    
+    // 只在第一次調用時顯示DEBUG，避免日誌過多
+    if (seconds < 1) {
+          }
+    
+    return formatted;
+  };
+
+  // 初始化 HLS 播放器
+  const initializeHLSPlayer = async (videoElement, videoUrl, ivodId, isModal = false) => {
+    
+    if (!videoElement) {
+            return null;
+    }
+
+    let hls = null;
+    
+    if (window.Hls && window.Hls.isSupported()) {
+            hls = new window.Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+        backBufferLength: 90
+      });
+      
+            hls.loadSource(videoUrl);
+      hls.attachMedia(videoElement);
+      
+      hls.on(window.Hls.Events.MANIFEST_PARSED, async () => {
+                
+        // 如果啟用字幕，載入字幕
+        if (subtitlesEnabled && ivodId) {
+                    const transcriptData = await fetchTranscript(ivodId);
+          
+          if (transcriptData && transcriptData.vttUrl) {
+                        
+            // 清除現有字幕軌道
+            const tracks = videoElement.textTracks;
+                        
+            for (let i = tracks.length - 1; i >= 0; i--) {
+              const track = tracks[i];
+              if (track.kind === 'subtitles') {
+                                track.mode = 'disabled';
+              }
+            }
+            
+            // 添加新的字幕軌道
+                        const track = videoElement.addTextTrack('subtitles', '中文字幕', 'zh-TW');
+            track.mode = 'showing';
+                        
+            // 載入 VTT 內容
+                        fetch(transcriptData.vttUrl)
+              .then(response => {
+                                return response.text();
+              })
+              .then(vttText => {
+                                                
+                // 解析 VTT 並添加 cues
+                const lines = vttText.split('\n');
+                                
+                let i = 0;
+                let cueCount = 0;
+                
+                while (i < lines.length) {
+                  const line = lines[i].trim();
+                  
+                  // 跳過 WEBVTT 標頭和空行
+                  if (line === 'WEBVTT' || line === '' || !line.includes('-->')) {
+                    i++;
+                    continue;
+                  }
+                  
+                  // 解析時間戳
+                  if (line.includes('-->')) {
+                                        const [startTime, endTime] = line.split(' --> ');
+                    const start = parseVTTTime(startTime);
+                    const end = parseVTTTime(endTime);
+                    
+                                        
+                    // 獲取字幕文本
+                    i++;
+                    let text = '';
+                    while (i < lines.length && lines[i].trim() !== '') {
+                      text += (text ? ' ' : '') + lines[i].trim();
+                      i++;
+                    }
+                    
+                                        
+                    if (text && start !== null && end !== null) {
+                      try {
+                        const cue = new VTTCue(start, end, text);
+                        cue.snapToLines = false;
+                        cue.line = 85; // 位置在底部85%
+                        cue.align = 'center';
+                        track.addCue(cue);
+                        cueCount++;
+                                              } catch (error) {
+                        console.error('❌ DEBUG: Error adding cue:', error, { start, end, text });
+                      }
+                    } else {
+                                          }
+                  }
+                  i++;
+                }
+                
+                                              })
+              .catch(error => {
+                console.error('💥 DEBUG: Error loading subtitles:', error);
+              });
+          } else {
+                      }
+        } else {
+                  }
+      });
+
+      hls.on(window.Hls.Events.ERROR, (event, data) => {
+        console.error('💥 DEBUG: HLS error:', { event, data });
+        if (data.fatal) {
+                    switch (data.type) {
+            case window.Hls.ErrorTypes.NETWORK_ERROR:
+                            hls.startLoad();
+              break;
+            case window.Hls.ErrorTypes.MEDIA_ERROR:
+                            hls.recoverMediaError();
+              break;
+            default:
+                            hls.destroy();
+              break;
+          }
+        }
+      });
+    } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari 原生支援
+            videoElement.src = videoUrl;
+    } else {
+          }
+    
+    return hls;
+  };
+
+  // 解析 VTT 時間格式
+  const parseVTTTime = (timeString) => {
+        
+    const parts = timeString.split(':');
+    if (parts.length !== 3) {
+            return null;
+    }
+    
+    const hours = parseInt(parts[0]);
+    const minutes = parseInt(parts[1]);
+    const secondsParts = parts[2].split('.');
+    const seconds = parseInt(secondsParts[0]);
+    const milliseconds = secondsParts[1] ? parseInt(secondsParts[1]) : 0;
+    
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000;
+    
+        
+    return totalSeconds;
+  };
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+            
+      try {
+        setLoading(true);
+
+        // 先載入第一頁，取得 total_page
+                const firstPageRes = await fetch('https://v2.ly.govapi.tw/ivods?委員名稱=翁曉玲&page=1&limit=100');
+        
+                
+        if (!firstPageRes.ok) throw new Error('Failed to fetch videos (page 1)');
+        const firstPageData = await firstPageRes.json();
+
+        const totalPages = firstPageData.total_page || 1;
+        let allVideos = firstPageData.ivods || [];
+
+        
+        // 並行載入第 2 頁到 totalPages
+        const remainingFetches = [];
+        for (let page = 2; page <= totalPages; page++) {
+          const url = `https://v2.ly.govapi.tw/ivods?委員名稱=翁曉玲&page=${page}&limit=100`;
+          remainingFetches.push(fetch(url).then(res => res.json()));
+        }
+
+                const remainingResults = await Promise.all(remainingFetches);
+        
+        for (const result of remainingResults) {
+          if (result?.ivods) {
+            allVideos = allVideos.concat(result.ivods);
+                      }
+        }
+
+        
+        setVideos(allVideos);
+        setFilteredVideos(allVideos);
+        setTotalItems(allVideos.length);
+      } catch (err) {
+        console.error('💥 DEBUG: Error fetching videos:', err);
+        setError(err.message || '載入失敗');
+      } finally {
+        setLoading(false);
+              }
+    };
+
+    fetchVideos();
+  }, []);
 
   // 搜尋和篩選邏輯
   useEffect(() => {
@@ -123,150 +509,114 @@ useEffect(() => {
     setCurrentPage(1); // 重置到第一頁
   }, [searchTerm, dateFilter, termFilter, sessionFilter, videos]);
 
-  // 修復播放器初始化邏輯 (僅電腦版)
+  // 初始化頁面影片播放器
   useEffect(() => {
-    if (isMobile) return; // 手機版不初始化嵌入式播放器
+                        
+    if (isMobile) {
+            return; // 手機版不初始化嵌入式播放器
+    }
     
-    // 安全清理現有播放器
-    videoRefs.current.forEach(ref => {
-      if (ref && ref.player && typeof ref.player.dispose === 'function') {
-        try {
-          // 檢查播放器是否還有效
-          if (!ref.player.isDisposed()) {
-            ref.player.dispose();
-          }
-        } catch (error) {
-          console.warn('Error disposing player:', error);
-        }
-        ref.player = null;
+    // 清理現有的 HLS 實例
+        hlsInstances.current.forEach((hls, index) => {
+      if (hls) {
+                hls.destroy();
       }
     });
+    hlsInstances.current = [];
 
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const currentVideos = filteredVideos.slice(startIndex, endIndex);
-
+    
     // 使用 setTimeout 確保 DOM 已更新
-    const timeoutId = setTimeout(() => {
-      currentVideos.forEach((_, index) => {
+    const timeoutId = setTimeout(async () => {
+            
+      for (let index = 0; index < currentVideos.length; index++) {
+        const video = currentVideos[index];
         const videoElement = videoRefs.current[index];
-        if (videoElement && !videoElement.player) {
-          try {
-            const player = videojs(videoElement, {
-              controls: true,
-              autoplay: false,
-              preload: 'metadata',
-              fluid: true,
-              playbackRates: [0.5, 1, 1.5, 2],
-              controlBar: {
-                children: [
-                  'playToggle',
-                  'volumePanel',
-                  'currentTimeDisplay',
-                  'timeDivider',
-                  'durationDisplay',
-                  'progressControl',
-                  'playbackRateMenuButton',
-                  'fullscreenToggle',
-                ],
-              },
-            });
-
-            videoElement.player = player;
-          } catch (error) {
-            console.warn('Error initializing player:', error);
-          }
-        }
-      });
-    }, 100);
+        
+                
+        if (videoElement && video.video_url) {
+          const hls = await initializeHLSPlayer(videoElement, video.video_url, video.IVOD_ID);
+          hlsInstances.current[index] = hls;
+                  } else {
+                  }
+      }
+      
+          }, 100);
 
     return () => {
-      clearTimeout(timeoutId);
-      videoRefs.current.forEach(ref => {
-        if (ref && ref.player && typeof ref.player.dispose === 'function') {
-          try {
-            if (!ref.player.isDisposed()) {
-              ref.player.dispose();
-            }
-          } catch (error) {
-            console.warn('Error disposing player in cleanup:', error);
-          }
-          ref.player = null;
+            clearTimeout(timeoutId);
+      hlsInstances.current.forEach((hls, index) => {
+        if (hls) {
+                    hls.destroy();
         }
       });
+      hlsInstances.current = [];
     };
-  }, [filteredVideos, currentPage, isMobile]);
+  }, [filteredVideos, currentPage, isMobile, subtitlesEnabled]);
 
   // Modal播放器初始化
   useEffect(() => {
-    if (showVideoModal && selectedVideo && modalVideoRef.current && !modalVideoRef.current.player) {
-      try {
-        const player = videojs(modalVideoRef.current, {
-          controls: true,
-          autoplay: true,
-          preload: 'auto',
-          fluid: true,
-          responsive: true,
-          playbackRates: [0.5, 1, 1.5, 2],
-          controlBar: {
-            children: [
-              'playToggle',
-              'volumePanel',
-              'currentTimeDisplay',
-              'timeDivider',
-              'durationDisplay',
-              'progressControl',
-              'playbackRateMenuButton',
-              'fullscreenToggle',
-            ],
-          },
-        });
+        
+    if (showVideoModal && selectedVideo && modalVideoRef.current) {
+      const initializeModalPlayer = async () => {
+                
+        // 清理現有實例
+        if (modalHlsInstance.current) {
+                    modalHlsInstance.current.destroy();
+          modalHlsInstance.current = null;
+        }
 
-        modalVideoRef.current.player = player;
-      } catch (error) {
-        console.warn('Error initializing modal player:', error);
-      }
+                const hls = await initializeHLSPlayer(
+          modalVideoRef.current, 
+          selectedVideo.video_url, 
+          selectedVideo.IVOD_ID, 
+          true
+        );
+        modalHlsInstance.current = hls;
+        
+        // 自動播放
+        if (modalVideoRef.current) {
+                    modalVideoRef.current.play()
+            .then(() => {
+                          })
+            .catch(error => {
+              console.warn('⚠️ DEBUG: Autoplay failed:', error);
+            });
+        }
+      };
+
+      initializeModalPlayer();
     }
 
     return () => {
-      if (modalVideoRef.current && modalVideoRef.current.player) {
-        try {
-          if (!modalVideoRef.current.player.isDisposed()) {
-            modalVideoRef.current.player.dispose();
-          }
-        } catch (error) {
-          console.warn('Error disposing modal player:', error);
-        }
-        modalVideoRef.current.player = null;
+            if (modalHlsInstance.current) {
+                modalHlsInstance.current.destroy();
+        modalHlsInstance.current = null;
       }
     };
-  }, [showVideoModal, selectedVideo]);
+  }, [showVideoModal, selectedVideo, subtitlesEnabled]);
 
-  // 組件卸載時清理所有播放器
+  // 組件卸載時清理所有資源
   useEffect(() => {
     return () => {
-      videoRefs.current.forEach(ref => {
-        if (ref && ref.player && typeof ref.player.dispose === 'function') {
-          try {
-            if (!ref.player.isDisposed()) {
-              ref.player.dispose();
-            }
-          } catch (error) {
-            console.warn('Error disposing player on unmount:', error);
-          }
+      hlsInstances.current.forEach(hls => {
+        if (hls) {
+          hls.destroy();
         }
       });
-      videoRefs.current = [];
       
-      if (modalVideoRef.current && modalVideoRef.current.player) {
-        try {
-          if (!modalVideoRef.current.player.isDisposed()) {
-            modalVideoRef.current.player.dispose();
-          }
-        } catch (error) {
-          console.warn('Error disposing modal player on unmount:', error);
-        }
+      if (modalHlsInstance.current) {
+        modalHlsInstance.current.destroy();
       }
+
+      // 清理所有 VTT blob URLs
+      transcripts.forEach(transcript => {
+        if (transcript.vttUrl) {
+          URL.revokeObjectURL(transcript.vttUrl);
+        }
+      });
     };
   }, []);
 
@@ -354,7 +704,7 @@ useEffect(() => {
 
     return pageVideos.map((video, index) => (
       <div key={video.IVOD_ID || index} className="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-        <div className="aspect-w-16 aspect-h-9 relative">
+        <div className="relative" style={{ aspectRatio: '16/9' }}>
           {isMobile ? (
             // 手機版：顯示縮圖和播放按鈕
             <div 
@@ -383,7 +733,15 @@ useEffect(() => {
                 點擊播放
               </div>
               
-              {/* 時長顯示（如果有的話） */}
+              {/* 字幕指示器 */}
+              {subtitlesEnabled && (
+                <div className="absolute top-3 right-3 bg-blue-600 bg-opacity-90 text-white px-2 py-1 rounded-full text-xs flex items-center">
+                  <Subtitles size={12} className="mr-1" />
+                  字幕
+                </div>
+              )}
+              
+              {/* 時長顯示 */}
               {video.委員發言時間 && (
                 <div className="absolute bottom-3 right-3 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs">
                   {video.委員發言時間}
@@ -392,19 +750,32 @@ useEffect(() => {
             </div>
           ) : (
             // 電腦版：嵌入式播放器
-            <video
-              ref={el => {
-                if (el) {
-                  videoRefs.current[index] = el;
-                }
-              }}
-              className="video-js vjs-default-skin vjs-big-play-centered w-full h-full object-cover"
-            >
-              <source src={video.video_url} type="application/x-mpegURL" />
-              <p className="vjs-no-js">
-                請啟用JavaScript並使用支援HTML5的瀏覽器以觀看影片
-              </p>
-            </video>
+            <div className="relative w-full h-full">
+              <video
+                ref={el => {
+                  if (el) {
+                    videoRefs.current[index] = el;
+                  }
+                }}
+                className="w-full h-full object-cover"
+                controls
+                preload="metadata"
+                playsInline
+                style={{ background: '#000' }}
+              >
+                <source src={video.video_url} type="application/x-mpegURL" />
+                您的瀏覽器不支援影片播放
+              </video>
+              
+              {/* 字幕狀態指示器 */}
+              {subtitlesEnabled && (
+                <div className="absolute top-2 right-2 bg-blue-600 bg-opacity-90 text-white px-2 py-1 rounded text-xs flex items-center">
+                  <Subtitles size={12} className="mr-1" />
+                  {transcripts.has(video.IVOD_ID) ? '字幕' : 
+                   loadingTranscripts.has(video.IVOD_ID) ? '載入中' : '字幕'}
+                </div>
+              )}
+            </div>
           )}
         </div>
         <div className="p-4">
@@ -431,15 +802,29 @@ useEffect(() => {
                 </div>
               </div>
             )}
-            <a 
-              href={video.IVOD_URL} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800 transition duration-300"
-            >
-              <Video size={16} className="mr-1" />
-              立院影片連結
-            </a>
+            <div className="flex items-center justify-between">
+              <a 
+                href={video.IVOD_URL} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800 transition duration-300"
+              >
+                <Video size={16} className="mr-1" />
+                立院影片連結
+              </a>
+              {transcripts.has(video.IVOD_ID) && (
+                <div className="flex items-center text-xs text-green-600">
+                  <Subtitles size={14} className="mr-1" />
+                  字幕已載入
+                </div>
+              )}
+              {loadingTranscripts.has(video.IVOD_ID) && (
+                <div className="flex items-center text-xs text-blue-600">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-1"></div>
+                  載入字幕中
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -489,15 +874,30 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* 篩選按鈕 */}
-          <div className="flex justify-between items-center">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-300"
-            >
-              <Filter size={16} className="mr-2" />
-              進階篩選
-            </button>
+          {/* 字幕控制和篩選按鈕 */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-300"
+              >
+                <Filter size={16} className="mr-2" />
+                進階篩選
+              </button>
+              
+              <button
+                onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}
+                className={`flex items-center px-4 py-2 rounded-lg transition duration-300 ${
+                  subtitlesEnabled 
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Subtitles size={16} className="mr-2" />
+                {subtitlesEnabled ? '字幕已啟用' : '字幕已停用'}
+              </button>
+
+            </div>
             
             {(searchTerm || dateFilter.start || dateFilter.end || termFilter || sessionFilter) && (
               <button
@@ -564,6 +964,7 @@ useEffect(() => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {displayVideos()}
         </div>
+        
         {!loading && !error && filteredVideos.length > 0 && (
           <div className="mt-12 flex justify-center items-center space-x-4">
             <button 
@@ -607,25 +1008,35 @@ useEffect(() => {
               <X size={24} />
             </button>
             
+            {/* 字幕狀態指示器 */}
+            {subtitlesEnabled && (
+              <div className="absolute top-4 left-4 z-40 bg-blue-600 bg-opacity-90 text-white px-3 py-2 rounded-lg flex items-center">
+                <Subtitles size={16} className="mr-2" />
+                <span className="text-sm">
+                  {transcripts.has(selectedVideo.IVOD_ID) ? '字幕已載入' : 
+                   loadingTranscripts.has(selectedVideo.IVOD_ID) ? '載入字幕中...' : '準備載入字幕'}
+                </span>
+              </div>
+            )}
+            
             {/* 影片標題 */}
-            <div className="absolute top-4 left-4 right-16 z-40 bg-black bg-opacity-50 text-white p-3 rounded">
+            <div className="absolute top-20 left-4 right-16 z-40 bg-black bg-opacity-50 text-white p-3 rounded">
               <h3 className="text-lg font-semibold line-clamp-2">{selectedVideo.會議名稱}</h3>
               <p className="text-sm opacity-80 mt-1">{formatDate(selectedVideo.日期)}</p>
             </div>
 
             {/* 影片播放器 */}
-            <div className="w-full h-full flex items-center justify-center p-4 pt-20">
+            <div className="w-full h-full flex items-center justify-center p-4 pt-32">
               <div className="w-full max-w-full" style={{ aspectRatio: '16/9' }}>
                 <video
                   ref={modalVideoRef}
-                  className="video-js vjs-default-skin w-full h-full"
+                  className="w-full h-full"
                   controls
-                  data-setup="{}"
+                  playsInline
+                  style={{ background: '#000' }}
                 >
                   <source src={selectedVideo.video_url} type="application/x-mpegURL" />
-                  <p className="vjs-no-js">
-                    請啟用JavaScript並使用支援HTML5的瀏覽器以觀看影片
-                  </p>
+                  您的瀏覽器不支援影片播放
                 </video>
               </div>
             </div>
